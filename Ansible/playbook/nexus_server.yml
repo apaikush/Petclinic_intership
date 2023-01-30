@@ -1,0 +1,89 @@
+---
+# tasks file for roles/nexus
+- hosts: nexus_server
+  become: true
+
+  tasks:  
+
+  
+  - name: Install OpenJDK 8
+    yum: 
+      name: java-1.8.0-openjdk 
+      state: latest
+
+# download nexus 
+
+  - name: Download nexus
+    get_url: 
+      url: "https://download.sonatype.com/nexus/3/nexus-3.41.0-01-unix.tar.gz" 
+      dest: /opt
+
+  - name: Extract nexus archive
+    unarchive: 
+      src: /opt/nexus-3.41.0-01-unix.tar.gz 
+      dest: /opt 
+      remote_src: yes
+
+  - name: delete archive file
+    file: 
+      state: absent 
+      path: /opt/nexus-3.41.0-01-unix.tar.gz
+
+  - name: rename nexus folder
+    command: mv /opt/nexus-3.41.0-01 /opt/nexus
+    ignore_errors: True
+
+  - name: delete old folder
+    file: 
+      state: absent 
+      path: /opt/nexus-3.41.0-01
+
+# set user, permissions, config
+
+  - name: Add nexus user
+    user: 
+      name: nexus
+      append: yes
+
+    
+  - name: Check 
+    file: dest=/opt/nexus owner=nexus group=nexus mode=0775 recurse=yes
+
+  - name: Check 
+    file: dest=/opt/sonatype-work owner=nexus group=nexus mode=0775 recurse=yes  
+
+
+
+  - name: run service as nexus user (nexus.rc)
+    lineinfile: 
+      dest: /opt/nexus/bin/nexus.rc 
+      regexp: "#run_as_user=" 
+      line: 'run_as_user="nexus"'
+
+  - name: run nexus at port 8080
+    lineinfile: 
+      dest: /opt/nexus/etc/nexus-default.properties 
+      regexp: "application-port=8081" 
+      line: 'application-port=8080'
+
+
+  - name: Create symbolic link 
+    file:
+      src: "/opt/nexus/bin/nexus"
+      dest: "/etc/init.d/nexus"
+      state: link
+
+# set nexus as a systemd service and start it
+
+  - name: create systemd service
+    copy: 
+      src: /Users/apaikush/ansible/jenkins_install/playbook/nexus.service
+      dest: /etc/systemd/system/nexus.service
+
+
+  - name: reload systemctl and start nexus
+    systemd:
+      name: nexus.service
+      daemon_reload: yes
+      enabled: yes
+      state: started

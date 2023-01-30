@@ -1,0 +1,33 @@
+---
+
+- hosts: jenkins_agent
+  become: true
+
+  tasks:
+  
+  - name: yum update
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Install java
+    yum:
+      name: java-11-openjdk-devel
+      state: present
+
+  - name: Install git
+    yum:
+      name: git
+      state: present
+      update_cache: yes
+
+
+  - name: Install Ansible
+    yum: 
+      name: ansible 
+      state: latest
+
+  - name: Create settings.xml on Agent
+    template:
+      src: ./settings.xml.j2
+      dest: /home/apaikush/.m2/settings.xml

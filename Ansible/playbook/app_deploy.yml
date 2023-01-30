@@ -1,0 +1,24 @@
+---
+- hosts: app-server
+  become: true
+  vars_files:  
+    - ./vars.yml
+  tasks:
+  
+  - name: Stop existing container
+    command: docker container stop app
+    ignore_errors: True
+    
+  - name: Delete local images
+    command: docker image prune -f -a
+    
+  - name: Login into Docker
+    command: docker login {{NEXUS_URL}} -u={{NEXUS_USER}} -p={{NEXUS_PASSWORD}}
+
+  - name: Run app container
+    command: |
+      docker container run -d --name app -p 8080:8080 --rm {{ NEXUS_URL }}/petclinic1:{{ IMAGE_VER }}
+      --spring.profiles.active=mysql
+      --spring.datasource.url={{ DB_URL }} 
+      --spring.datasource.username={{ DB_USER }} 
+      --spring.datasource.password={{ DB_PASSWORD }}

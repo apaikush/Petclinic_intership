@@ -1,0 +1,47 @@
+---
+
+- hosts: app_server
+  become: true
+
+  tasks:  
+
+  - name: Update all packages and install yum-utils
+    yum:
+      name: 
+        - '*'
+        - yum-utils
+      state: latest
+
+  - name: Add Docker repo
+    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+  - name: Install Docker Engine
+    package:
+      name: 
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      state: latest
+
+  - name: create /etc/docker
+    file:
+      path: /etc/docker
+      state: directory
+      mode: '0755'
+    
+
+  - name: Create daemon.json
+    copy: 
+      src: ./daemon.json
+      dest: /etc/docker/daemon.json
+
+  - name: Start Docker service
+    service:
+      name: docker
+      state: restarted
+      enabled: yes
+
+  - name: Give user docker.sock permission
+    file:
+      path: /var/run/docker.sock
+      mode: '0666'
