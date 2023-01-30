@@ -1,3 +1,4 @@
 /Terraform/keys/*
 /Ansible/terr_inventory
 /Ansible/ansible.cfg
+/Ansible/playbook/test_playbooks/*
