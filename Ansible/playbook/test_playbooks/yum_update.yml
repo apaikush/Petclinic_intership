@@ -1,6 +1,0 @@
----
-  - hosts: jenkins
-    become: true
-    tasks:
-      - name: Update yum packages
-        yum: name=* state=latest
